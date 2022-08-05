@@ -1,0 +1,10 @@
+note over browser:
+there is an event handler on the submit form
+when the form is submitted it prevents the default http get request behaviour
+handler creates a new note and rerenders the note list
+then it sends the new note to the server via POST request
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+server->browser: JSON data
+
