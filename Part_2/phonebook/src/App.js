@@ -1,5 +1,7 @@
 import { useState } from 'react'
-
+import Search from "./components/Search";
+import PersonForm from "./components/PersonForm"
+import Persons from "./components/Persons";
 
 const App = () => {
     const [persons, setPersons] = useState([
@@ -28,10 +30,11 @@ const App = () => {
     const changePersons = (event) => {
         event.preventDefault()
 
-        // if (persons.find(obj => JSON.stringify(obj) === JSON.stringify({name: newName})) === undefined) {
         if (persons.find(obj => obj.name === newName || obj.number === newNumber) === undefined) {
             const nameObj = {
-                    name: newName
+                    name: newName,
+                    number: newNumber,
+                    id: persons[persons.length - 1].id + 1
                 }
                 setPersons(persons.concat(nameObj))
             }
@@ -43,32 +46,11 @@ const App = () => {
     return (
         <div>
             <h2>Phonebook</h2>
-            <div>
-                filter shown with<input onChange={handleSearchValue}/>
-            </div>
+            <Search handleEvent={handleSearchValue} />
             <h2>add a new</h2>
-            <form onSubmit={changePersons}>
-                <div>
-                    name: <input onChange={handleNameChange} />
-                </div>
-                <div>
-                    number: <input onChange={handleNumberChange} />
-                </div>
-                <div>
-                    <button type="submit">add</button>
-                </div>
-            </form>
+            <PersonForm changePersons={changePersons} handleNumberChange={handleNumberChange} handleNameChange={handleNameChange} />
             <h2>Numbers</h2>
-            <ul>
-                {persons.map((person) => {
-                    if (person.name.toLowerCase().includes(searchValue.toLowerCase())) {
-                        return (
-                            <li key={person.name}>{person.name} {person.number}</li>
-                        )
-                    }
-                }
-                )}
-            </ul>
+            <Persons personsArr={persons} searchValue={searchValue}/>
         </div>
     )
 }
