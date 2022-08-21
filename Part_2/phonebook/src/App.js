@@ -1,19 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Search from "./components/Search";
 import PersonForm from "./components/PersonForm"
 import Persons from "./components/Persons";
+import axios from 'axios'
+import personService from './services/personsMethods'
 
 const App = () => {
-    const [persons, setPersons] = useState([
-        { name: 'Arto Hellas', number: '040-123456', id: 1 },
-        { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-        { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-        { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-    ])
+    const [persons, setPersons] = useState([])
 
     const [newName, setNewName] = useState('')
     const [newNumber, setNewNumber] = useState('')
     const [searchValue, setSearchValue] = useState('')
+
+    useEffect(() => {
+        axios
+            .get('http://localhost:3001/persons')
+            .then(response => {
+                setPersons(response.data)
+            })
+    }, [])
+    console.log(persons)
 
     const handleSearchValue = (event) => {
         setSearchValue(event.target.value)
@@ -27,19 +33,57 @@ const App = () => {
         setNewNumber(event.target.value)
     }
 
+    const handleDeletePerson = (id) => {
+        return function() {
+            const currentPerson = persons.find(person => person.id === id)
+            if (window.confirm(`Do you really want to delete ${currentPerson.name}?`)) {
+                const deletedPersons = persons.filter(person => person.id !== id)
+                setPersons(deletedPersons)
+                return personService.personDelete(id)
+            }
+        }
+    }
+
     const changePersons = (event) => {
         event.preventDefault()
 
-        if (persons.find(obj => obj.name === newName || obj.number === newNumber) === undefined) {
-            const nameObj = {
-                    name: newName,
-                    number: newNumber,
-                    id: persons[persons.length - 1].id + 1
+        const personName = persons.find(obj => obj.name === newName)
+        const personNumber = persons.find(obj => obj.number === newNumber)
+
+        const nameObj = {
+            name: newName,
+            number: newNumber,
+            id: persons[persons.length - 1].id + 1
+        }
+
+        if (personName !== undefined) {
+                if (window.confirm(`${personName.name} is already defined, do you want to rewrite ${personName.number}?`))
+                {
+                    personService.personUpdate(personName.id, nameObj).then(response => {
+                        setPersons(persons.map(el => {
+                            return el.id === personName.id ? response : el
+                        }))
+                    })
                 }
-                setPersons(persons.concat(nameObj))
             }
+        else if (personNumber !== undefined) {
+            if (window.confirm(`${personNumber.number} is already defined, do you want to rewrite ${personNumber.name}'s name?`))
+            {
+                personService.personUpdate(personNumber.id, nameObj).then(response => {
+                    setPersons(persons.map(el => {
+                        return el.id === personNumber.id ? response : el
+                    }))
+                    })
+            }
+        }
         else {
-            window.alert(`This name or number was already added to phonebook.`)
+            personService
+                .personAdd(nameObj)
+                .then(response => {
+                    setPersons(persons.concat(response))
+                    setNewNumber('')
+                    setNewName('')
+                })
         }
     }
 
@@ -48,9 +92,9 @@ const App = () => {
             <h2>Phonebook</h2>
             <Search handleEvent={handleSearchValue} />
             <h2>add a new</h2>
-            <PersonForm changePersons={changePersons} handleNumberChange={handleNumberChange} handleNameChange={handleNameChange} />
+            <PersonForm nameValue={newName} numberValue={newNumber} changePersons={changePersons} handleNumberChange={handleNumberChange} handleNameChange={handleNameChange} />
             <h2>Numbers</h2>
-            <Persons personsArr={persons} searchValue={searchValue}/>
+            <Persons personsArr={persons} searchValue={searchValue} handleClick={handleDeletePerson}/>
         </div>
     )
 }
