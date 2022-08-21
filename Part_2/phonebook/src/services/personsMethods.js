@@ -3,13 +3,12 @@ const base_url = 'http://localhost:3001/persons'
 
 const personAdd = (object) => {
     return axios.post(base_url, object).then(response => {
-        console.log(response.data)
         return response.data
     })
 }
 
 const personDelete = (id) => {
-    return axios.delete(`${base_url}/${id}`).then(response => response)
+    return axios.delete(`${base_url}/${id}`).then(response => response.data)
 }
 
 const personUpdate = (id, object) => {
